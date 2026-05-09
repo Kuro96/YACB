@@ -56,3 +56,15 @@ export function pushRecord(session, question, answer) {
   if (session.isRetry && lastRecord && lastRecord.question === question) lastRecord.answer = answer
   else session.conversationRecords.push({ question: question, answer: answer })
 }
+
+export function appendStreamAnswer(answer, choice) {
+  const delta = choice?.delta
+  const reasoning = delta?.reasoning_content ?? delta?.reasoning
+  if (typeof reasoning === 'string' && reasoning) answer += `<think>${reasoning}</think>`
+
+  if (typeof delta?.content === 'string') answer += delta.content
+  else if (typeof choice?.message?.content === 'string') answer = choice.message.content
+  else if (typeof choice?.text === 'string') answer += choice.text
+
+  return answer
+}
