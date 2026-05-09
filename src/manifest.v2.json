@@ -1,8 +1,19 @@
 {
-  "name": "ChatGPTBox",
-  "description": "Integrating ChatGPT into your browser deeply, everything you need is here",
-  "version": "2.5.9",
+  "name": "YACB",
+  "description": "Yet Another ChatGPTBox for deeply integrating ChatGPT into your browser.",
+  "version": "2.6.0",
   "manifest_version": 2,
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "yacb@kuro96.dev",
+      "data_collection_permissions": {
+        "required": [
+          "searchTerms",
+          "websiteContent"
+        ]
+      }
+    }
+  },
   "icons": {
     "16": "logo.png",
     "32": "logo.png",
