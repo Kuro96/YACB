@@ -133,6 +133,49 @@ test('generateAnswersWithOpenAiApiCompat uses max_completion_tokens for OpenAI l
   }
 })
 
+test('generateAnswersWithOpenAiApiCompat preserves DeepSeek V4 thinking controls', async (t) => {
+  t.mock.method(console, 'debug', () => {})
+  setStorage({
+    maxConversationContextLength: 3,
+    maxResponseTokenLength: 333,
+    temperature: 0.2,
+  })
+
+  const session = {
+    modelName: 'deepseek-v4-pro',
+    conversationRecords: [],
+    isRetry: false,
+  }
+  const port = createFakePort()
+
+  let capturedInit
+  t.mock.method(globalThis, 'fetch', async (_input, init) => {
+    capturedInit = init
+    return createMockSseResponse([
+      'data: {"choices":[{"delta":{"content":"OK"},"finish_reason":"stop"}]}\n\n',
+    ])
+  })
+
+  await generateAnswersWithOpenAiApiCompat(
+    'https://api.deepseek.com',
+    port,
+    'CurrentQ',
+    session,
+    'sk-test',
+    {
+      thinking: { type: 'enabled' },
+      reasoning_effort: 'high',
+    },
+  )
+
+  const body = JSON.parse(capturedInit.body)
+  assert.equal(body.model, 'deepseek-v4-pro')
+  assert.equal(body.max_tokens, 333)
+  assert.equal(Object.hasOwn(body, 'max_completion_tokens'), false)
+  assert.deepEqual(body.thinking, { type: 'enabled' })
+  assert.equal(body.reasoning_effort, 'high')
+})
+
 test('generateAnswersWithOpenAiApiCompat uses latest mapped gpt-5 API model values', async (t) => {
   t.mock.method(console, 'debug', () => {})
   setStorage({

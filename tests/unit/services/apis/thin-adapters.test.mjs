@@ -130,3 +130,85 @@ test('chatglm-api: reads chatglmApiKey from config', async (t) => {
 
   assert.equal(capturedInit.headers.Authorization, 'Bearer glm-secret')
 })
+
+test('deepseek-api: disables thinking for deepseek-v4-flash', async (t) => {
+  t.mock.method(console, 'debug', () => {})
+  setStorage(commonStorage)
+
+  const session = {
+    modelName: 'deepseek-v4-flash',
+    conversationRecords: [],
+    isRetry: false,
+  }
+  const port = createFakePort()
+
+  let capturedInit
+  t.mock.method(globalThis, 'fetch', async (_input, init) => {
+    capturedInit = init
+    return createMockSseResponse(sseChunks)
+  })
+
+  await generateAnswersWithDeepSeekApi(port, 'Q', session, 'ds-key')
+
+  const body = JSON.parse(capturedInit.body)
+  assert.deepEqual(body.thinking, { type: 'disabled' })
+  assert.equal(Object.hasOwn(body, 'reasoning_effort'), false)
+})
+
+test('deepseek-api: enables thinking for deepseek-v4-pro', async (t) => {
+  t.mock.method(console, 'debug', () => {})
+  setStorage(commonStorage)
+
+  const session = {
+    modelName: 'deepseek-v4-pro',
+    conversationRecords: [],
+    isRetry: false,
+  }
+  const port = createFakePort()
+
+  let capturedInit
+  t.mock.method(globalThis, 'fetch', async (_input, init) => {
+    capturedInit = init
+    return createMockSseResponse(sseChunks)
+  })
+
+  await generateAnswersWithDeepSeekApi(port, 'Q', session, 'ds-key')
+
+  const body = JSON.parse(capturedInit.body)
+  assert.deepEqual(body.thinking, { type: 'enabled' })
+  assert.equal(body.reasoning_effort, 'high')
+})
+
+test('deepseek-api: resolves request body from apiMode selection', async (t) => {
+  t.mock.method(console, 'debug', () => {})
+  setStorage(commonStorage)
+
+  const session = {
+    modelName: 'deepseek-v4-flash',
+    apiMode: {
+      groupName: 'deepSeekApiModelKeys',
+      itemName: 'deepseek-v4-pro',
+      isCustom: false,
+      customName: '',
+      customUrl: '',
+      apiKey: '',
+      active: true,
+    },
+    conversationRecords: [],
+    isRetry: false,
+  }
+  const port = createFakePort()
+
+  let capturedInit
+  t.mock.method(globalThis, 'fetch', async (_input, init) => {
+    capturedInit = init
+    return createMockSseResponse(sseChunks)
+  })
+
+  await generateAnswersWithDeepSeekApi(port, 'Q', session, 'ds-key')
+
+  const body = JSON.parse(capturedInit.body)
+  assert.equal(body.model, 'deepseek-v4-pro')
+  assert.deepEqual(body.thinking, { type: 'enabled' })
+  assert.equal(body.reasoning_effort, 'high')
+})
