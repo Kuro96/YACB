@@ -9,7 +9,7 @@ import { getUserConfig } from '../../config/index.mjs'
 import { fetchSSE } from '../../utils/fetch-sse.mjs'
 import { getConversationPairs } from '../../utils/get-conversation-pairs.mjs'
 import { isEmpty } from 'lodash-es'
-import { pushRecord, setAbortController } from './shared.mjs'
+import { appendStreamAnswer, pushRecord, setAbortController } from './shared.mjs'
 import { getChatCompletionsTokenParams } from './openai-token-params.mjs'
 
 /**
@@ -74,18 +74,9 @@ export async function generateAnswersWithCustomApi(
         return
       }
 
-      if (data.response) answer = data.response
+      if (typeof data.response === 'string') answer = data.response
       else {
-        const delta = data.choices?.[0]?.delta?.content
-        const content = data.choices?.[0]?.message?.content
-        const text = data.choices?.[0]?.text
-        if (delta !== undefined) {
-          answer += delta
-        } else if (typeof content === 'string') {
-          answer = content
-        } else if (text) {
-          answer += text
-        }
+        answer = appendStreamAnswer(answer, data.choices?.[0])
       }
       port.postMessage({ answer: answer, done: false, session: null })
 
