@@ -17,6 +17,7 @@ import {
   isUsingCustomModel,
   isUsingCustomNameOnlyModel,
   isUsingDeepSeekApiModel,
+  deepSeekApiModelKeys,
   isUsingGeminiWebModel,
   isUsingGithubThirdPartyApiModel,
   isUsingMoonshotApiModel,
@@ -189,8 +190,11 @@ test('isUsingMoonshotApiModel detects moonshot API models', () => {
 })
 
 test('isUsingDeepSeekApiModel detects DeepSeek models', () => {
+  assert.deepEqual(deepSeekApiModelKeys.slice(0, 2), ['deepseek-v4-flash', 'deepseek-v4-pro'])
   assert.equal(isUsingDeepSeekApiModel({ modelName: 'deepseek_chat' }), true)
   assert.equal(isUsingDeepSeekApiModel({ modelName: 'deepseek_reasoner' }), true)
+  assert.equal(isUsingDeepSeekApiModel({ modelName: 'deepseek-v4-flash' }), true)
+  assert.equal(isUsingDeepSeekApiModel({ modelName: 'deepseek-v4-pro' }), true)
   assert.equal(isUsingDeepSeekApiModel({ modelName: 'chatgptApi4oMini' }), false)
 })
 
