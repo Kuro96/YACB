@@ -27,6 +27,16 @@ test('modelNameToApiMode and apiModeToModelName round-trip custom model names', 
   assert.equal(apiModeToModelName(apiMode), modelName)
 })
 
+test('modelNameToApiMode keeps hyphenated built-in model names intact', () => {
+  const apiMode = modelNameToApiMode('deepseek-v4-flash')
+
+  assert.equal(apiMode.groupName, 'deepSeekApiModelKeys')
+  assert.equal(apiMode.itemName, 'deepseek-v4-flash')
+  assert.equal(apiMode.isCustom, false)
+  assert.equal(apiMode.customName, '')
+  assert.equal(apiModeToModelName(apiMode), 'deepseek-v4-flash')
+})
+
 test('apiModeToModelName uses groupName prefix for AlwaysCustomGroups', () => {
   const apiMode = {
     groupName: 'azureOpenAiApiModelKeys',

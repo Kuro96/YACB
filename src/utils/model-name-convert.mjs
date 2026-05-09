@@ -58,7 +58,13 @@ export function getModelValue(configOrSession) {
 }
 
 export function isCustomModelName(modelName) {
-  return modelName ? modelName.includes('-') : false
+  if (!modelName || !modelName.includes('-')) return false
+  if (!(modelName in Models)) return true
+
+  const separatorIndex = modelName.indexOf('-')
+  const presetPart = modelName.substring(0, separatorIndex)
+  const customPart = modelName.substring(separatorIndex + 1)
+  return presetPart in Models && customPart in ModelMode
 }
 
 export function modelNameToApiMode(modelName) {
