@@ -1,5 +1,5 @@
 import { getUserConfig } from '../../config/index.mjs'
-import { pushRecord, setAbortController } from './shared.mjs'
+import { appendStreamAnswer, pushRecord, setAbortController } from './shared.mjs'
 import { getConversationPairs } from '../../utils/get-conversation-pairs.mjs'
 import { fetchSSE } from '../../utils/fetch-sse.mjs'
 import { isEmpty } from 'lodash-es'
@@ -50,15 +50,12 @@ export async function generateAnswersWithAzureOpenaiApi(port, question, session)
           console.debug('json error', error)
           return
         }
-        if (
-          data.choices &&
-          data.choices.length > 0 &&
-          data.choices[0] &&
-          data.choices[0].delta &&
-          'content' in data.choices[0].delta
-        ) {
-          answer += data.choices[0].delta.content
-          port.postMessage({ answer: answer, done: false, session: null })
+        if (data.choices && data.choices.length > 0 && data.choices[0]) {
+          const nextAnswer = appendStreamAnswer(answer, data.choices[0])
+          if (nextAnswer !== answer) {
+            answer = nextAnswer
+            port.postMessage({ answer: answer, done: false, session: null })
+          }
         }
 
         if (data.choices && data.choices.length > 0 && data.choices[0]?.finish_reason) {

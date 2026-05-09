@@ -639,6 +639,85 @@ test('generateAnswersWithOpenAiApiCompat supports message.content fallback', asy
   })
 })
 
+test('generateAnswersWithOpenAiApiCompat treats message.content as a full answer', async (t) => {
+  t.mock.method(console, 'debug', () => {})
+  setStorage({
+    maxConversationContextLength: 2,
+    maxResponseTokenLength: 256,
+    temperature: 0.2,
+  })
+
+  const session = {
+    modelName: 'chatgptApi4oMini',
+    conversationRecords: [],
+    isRetry: false,
+  }
+  const port = createFakePort()
+
+  t.mock.method(globalThis, 'fetch', async () =>
+    createMockSseResponse([
+      'data: {"choices":[{"delta":{"content":"Draft"}}]}\n\n',
+      'data: {"choices":[{"message":{"content":"Final content"},"finish_reason":"stop"}]}\n\n',
+    ]),
+  )
+
+  await generateAnswersWithOpenAiApiCompat(
+    'https://api.example.com/v1',
+    port,
+    'CurrentQ',
+    session,
+    'sk-test',
+  )
+
+  assert.deepEqual(session.conversationRecords.at(-1), {
+    question: 'CurrentQ',
+    answer: 'Final content',
+  })
+})
+
+test('generateAnswersWithOpenAiApiCompat keeps reasoning separate from final content', async (t) => {
+  t.mock.method(console, 'debug', () => {})
+  setStorage({
+    maxConversationContextLength: 2,
+    maxResponseTokenLength: 256,
+    temperature: 0.2,
+  })
+
+  const session = {
+    modelName: 'chatgptApi4oMini',
+    conversationRecords: [],
+    isRetry: false,
+  }
+  const port = createFakePort()
+
+  t.mock.method(globalThis, 'fetch', async () =>
+    createMockSseResponse([
+      'data: {"choices":[{"delta":{"reasoning_content":"Think","content":null}}]}\n\n',
+      'data: {"choices":[{"delta":{"content":"Final"},"finish_reason":"stop"}]}\n\n',
+    ]),
+  )
+
+  await generateAnswersWithOpenAiApiCompat(
+    'https://api.example.com/v1',
+    port,
+    'CurrentQ',
+    session,
+    'sk-test',
+  )
+
+  const streamingAnswers = port.postedMessages
+    .filter((message) => message.done === false)
+    .map((message) => message.answer)
+  assert.equal(streamingAnswers.some((answer) => answer === null), false)
+  assert.equal(streamingAnswers.some((answer) => typeof answer === 'string' && answer.includes('null')), false)
+  assert.equal(streamingAnswers.some((answer) => answer === '<think>Think</think>'), true)
+  assert.equal(streamingAnswers.at(-1), '<think>Think</think>Final')
+  assert.deepEqual(session.conversationRecords.at(-1), {
+    question: 'CurrentQ',
+    answer: '<think>Think</think>Final',
+  })
+})
+
 test('generateAnswersWithGptCompletionApi builds completion prompt and appends answer', async (t) => {
   t.mock.method(console, 'debug', () => {})
   setStorage({

@@ -197,6 +197,43 @@ test('azure-openai: aggregates SSE deltas and pushes record on finish', async (t
   })
 })
 
+test('azure-openai: keeps reasoning chunks separate from final content', async (t) => {
+  t.mock.method(console, 'debug', () => {})
+  setStorage({
+    azureEndpoint: 'https://myinstance.openai.azure.com',
+    azureApiKey: 'az-key',
+    azureDeploymentName: 'gpt-4o',
+    maxConversationContextLength: 3,
+    maxResponseTokenLength: 256,
+    temperature: 0.5,
+  })
+
+  const session = {
+    modelName: 'azureOpenAi',
+    conversationRecords: [],
+    isRetry: false,
+  }
+  const port = createFakePort()
+
+  t.mock.method(globalThis, 'fetch', async () =>
+    createMockSseResponse([
+      'data: {"choices":[{"delta":{"reasoning_content":"Plan","content":null}}]}\n\n',
+      'data: {"choices":[{"delta":{"content":"Done"},"finish_reason":"stop"}]}\n\n',
+    ]),
+  )
+
+  await generateAnswersWithAzureOpenaiApi(port, 'Q', session)
+
+  const partialAnswers = port.postedMessages.filter((m) => m.done === false).map((m) => m.answer)
+  assert.equal(partialAnswers.some((answer) => answer === null), false)
+  assert.equal(partialAnswers.some((answer) => typeof answer === 'string' && answer.includes('null')), false)
+  assert.equal(partialAnswers.at(-1), '<think>Plan</think>Done')
+  assert.deepEqual(session.conversationRecords.at(-1), {
+    question: 'Q',
+    answer: '<think>Plan</think>Done',
+  })
+})
+
 test('azure-openai: cleans up listeners on end', async (t) => {
   t.mock.method(console, 'debug', () => {})
   setStorage({

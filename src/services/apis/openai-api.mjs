@@ -4,7 +4,7 @@ import { getUserConfig } from '../../config/index.mjs'
 import { fetchSSE } from '../../utils/fetch-sse.mjs'
 import { getConversationPairs } from '../../utils/get-conversation-pairs.mjs'
 import { isEmpty } from 'lodash-es'
-import { getCompletionPromptBase, pushRecord, setAbortController } from './shared.mjs'
+import { appendStreamAnswer, getCompletionPromptBase, pushRecord, setAbortController } from './shared.mjs'
 import { getModelValue } from '../../utils/model-name-convert.mjs'
 import { getChatCompletionsTokenParams } from './openai-token-params.mjs'
 
@@ -66,7 +66,7 @@ export async function generateAnswersWithGptCompletionApi(port, question, sessio
         return
       }
 
-      answer += data.choices[0].text
+      answer = appendStreamAnswer(answer, data.choices[0])
       port.postMessage({ answer: answer, done: false, session: null })
 
       if (data.choices[0]?.finish_reason) {
@@ -172,16 +172,7 @@ export async function generateAnswersWithOpenAiApiCompat(
         return
       }
 
-      const delta = data.choices[0]?.delta?.content
-      const content = data.choices[0]?.message?.content
-      const text = data.choices[0]?.text
-      if (delta !== undefined) {
-        answer += delta
-      } else if (content) {
-        answer = content
-      } else if (text) {
-        answer += text
-      }
+      answer = appendStreamAnswer(answer, data.choices[0])
       port.postMessage({ answer: answer, done: false, session: null })
 
       if (data.choices[0]?.finish_reason) {
