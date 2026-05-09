@@ -111,7 +111,9 @@ export const moonshotApiModelKeys = [
   'moonshot_v1_32k',
   'moonshot_v1_128k',
 ]
-export const deepSeekApiModelKeys = ['deepseek_chat', 'deepseek_reasoner']
+export const deepSeekV4ApiModelKeys = ['deepseek-v4-flash', 'deepseek-v4-pro']
+export const deepSeekLegacyApiModelKeys = ['deepseek_chat', 'deepseek_reasoner']
+export const deepSeekApiModelKeys = [...deepSeekV4ApiModelKeys, ...deepSeekLegacyApiModelKeys]
 export const openRouterApiModelKeys = [
   'openRouter_auto',
   'openRouter_free',
@@ -381,6 +383,14 @@ export const Models = {
     desc: 'Kimi.Moonshot (128k)',
   },
 
+  'deepseek-v4-flash': {
+    value: 'deepseek-v4-flash',
+    desc: 'DeepSeek (V4 Flash)',
+  },
+  'deepseek-v4-pro': {
+    value: 'deepseek-v4-pro',
+    desc: 'DeepSeek (V4 Pro)',
+  },
   deepseek_chat: {
     value: 'deepseek-chat',
     desc: 'DeepSeek (Chat)',
