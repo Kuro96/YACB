@@ -5,6 +5,7 @@ import ReadButton from '../ReadButton'
 import PropTypes from 'prop-types'
 import MarkdownRender from '../MarkdownRender/markdown.jsx'
 import { useTranslation } from 'react-i18next'
+import { removeThinkBlocks } from '../../utils'
 
 function AnswerTitle({ descName }) {
   const { t } = useTranslation()
@@ -19,6 +20,7 @@ AnswerTitle.propTypes = {
 export function ConversationItem({ type, content, descName, onRetry }) {
   const { t } = useTranslation()
   const [collapsed, setCollapsed] = useState(false)
+  const answerContent = removeThinkBlocks(content)
 
   switch (type) {
     case 'question':
@@ -63,9 +65,9 @@ export function ConversationItem({ type, content, descName, onRetry }) {
                 </span>
               )}
               {descName && (
-                <CopyButton contentFn={() => content.replace(/\n<hr\/>$/, '')} size={14} />
+                <CopyButton contentFn={() => answerContent.replace(/\n<hr\/>$/, '')} size={14} />
               )}
-              {descName && <ReadButton contentFn={() => content} size={14} />}
+              {descName && <ReadButton contentFn={() => answerContent} size={14} />}
               {!collapsed ? (
                 <span
                   title={t('Collapse')}
