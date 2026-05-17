@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next'
 // eslint-disable-next-line
 const ThinkComponent = ({ node, children, ...props }) => {
   const { t } = useTranslation()
-  const [isExpanded, setIsExpanded] = useState(true)
+  const [isExpanded, setIsExpanded] = useState(false)
   const isEmpty =
     !children ||
     (Array.isArray(children) &&
