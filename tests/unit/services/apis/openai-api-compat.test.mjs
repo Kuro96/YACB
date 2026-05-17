@@ -751,13 +751,72 @@ test('generateAnswersWithOpenAiApiCompat keeps reasoning separate from final con
   const streamingAnswers = port.postedMessages
     .filter((message) => message.done === false)
     .map((message) => message.answer)
-  assert.equal(streamingAnswers.some((answer) => answer === null), false)
-  assert.equal(streamingAnswers.some((answer) => typeof answer === 'string' && answer.includes('null')), false)
-  assert.equal(streamingAnswers.some((answer) => answer === '<think>Think</think>'), true)
+  assert.equal(
+    streamingAnswers.some((answer) => answer === null),
+    false,
+  )
+  assert.equal(
+    streamingAnswers.some((answer) => typeof answer === 'string' && answer.includes('null')),
+    false,
+  )
+  assert.equal(
+    streamingAnswers.some((answer) => answer === '<think>Think</think>'),
+    true,
+  )
   assert.equal(streamingAnswers.at(-1), '<think>Think</think>Final')
   assert.deepEqual(session.conversationRecords.at(-1), {
     question: 'CurrentQ',
     answer: '<think>Think</think>Final',
+  })
+})
+
+test('generateAnswersWithOpenAiApiCompat merges consecutive reasoning chunks', async (t) => {
+  t.mock.method(console, 'debug', () => {})
+  setStorage({
+    maxConversationContextLength: 2,
+    maxResponseTokenLength: 256,
+    temperature: 0.2,
+  })
+
+  const session = {
+    modelName: 'deepseek-v4-pro',
+    conversationRecords: [],
+    isRetry: false,
+  }
+  const port = createFakePort()
+
+  t.mock.method(globalThis, 'fetch', async () =>
+    createMockSseResponse([
+      'data: {"choices":[{"delta":{"reasoning_content":"好的","content":null}}]}\n\n',
+      'data: {"choices":[{"delta":{"reasoning_content":"，用户","content":null}}]}\n\n',
+      'data: {"choices":[{"delta":{"reasoning_content":"要求","content":null}}]}\n\n',
+      'data: {"choices":[{"delta":{"content":"Final"},"finish_reason":"stop"}]}\n\n',
+    ]),
+  )
+
+  await generateAnswersWithOpenAiApiCompat(
+    'https://api.deepseek.com',
+    port,
+    'CurrentQ',
+    session,
+    'sk-test',
+    {
+      thinking: { type: 'enabled' },
+      reasoning_effort: 'high',
+    },
+  )
+
+  const streamingAnswers = port.postedMessages
+    .filter((message) => message.done === false)
+    .map((message) => message.answer)
+  assert.equal(streamingAnswers.at(0), '<think>好的</think>')
+  assert.equal(streamingAnswers.at(1), '<think>好的，用户</think>')
+  assert.equal(streamingAnswers.at(2), '<think>好的，用户要求</think>')
+  assert.equal(streamingAnswers.at(-1), '<think>好的，用户要求</think>Final')
+  assert.equal(streamingAnswers.at(-1).match(/<think>/g).length, 1)
+  assert.deepEqual(session.conversationRecords.at(-1), {
+    question: 'CurrentQ',
+    answer: '<think>好的，用户要求</think>Final',
   })
 })
 
