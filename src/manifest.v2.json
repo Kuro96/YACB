@@ -1,7 +1,7 @@
 {
   "name": "YACB",
   "description": "Yet Another ChatGPTBox for deeply integrating ChatGPT into your browser.",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "manifest_version": 2,
   "browser_specific_settings": {
     "gecko": {
