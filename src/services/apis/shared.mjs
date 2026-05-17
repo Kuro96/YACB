@@ -60,7 +60,13 @@ export function pushRecord(session, question, answer) {
 export function appendStreamAnswer(answer, choice) {
   const delta = choice?.delta
   const reasoning = delta?.reasoning_content ?? delta?.reasoning
-  if (typeof reasoning === 'string' && reasoning) answer += `<think>${reasoning}</think>`
+  if (typeof reasoning === 'string' && reasoning) {
+    if (answer.endsWith('</think>')) {
+      answer = `${answer.slice(0, -8)}${reasoning}</think>`
+    } else {
+      answer += `<think>${reasoning}</think>`
+    }
+  }
 
   if (typeof delta?.content === 'string') answer += delta.content
   else if (typeof choice?.message?.content === 'string') answer = choice.message.content
