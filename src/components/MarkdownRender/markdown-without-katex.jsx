@@ -5,13 +5,15 @@ import remarkGfm from 'remark-gfm'
 import remarkBreaks from 'remark-breaks'
 import { Pre } from './Pre'
 import { Hyperlink } from './Hyperlink'
-import { memo, useState } from 'react'
+import { memo, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { shouldExpandThinkBlock } from './think-display.mjs'
 
 // eslint-disable-next-line
-const ThinkComponent = ({ node, children, ...props }) => {
+const ThinkComponent = ({ children, thinkingBlockMode, answerContent, answerDone }) => {
   const { t } = useTranslation()
-  const [isExpanded, setIsExpanded] = useState(false)
+  const shouldExpand = shouldExpandThinkBlock(thinkingBlockMode, answerContent, answerDone)
+  const [isExpanded, setIsExpanded] = useState(shouldExpand)
   const isEmpty =
     !children ||
     (Array.isArray(children) &&
@@ -23,6 +25,10 @@ const ThinkComponent = ({ node, children, ...props }) => {
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded)
   }
+
+  useEffect(() => {
+    setIsExpanded(shouldExpand)
+  }, [shouldExpand])
 
   return isEmpty ? (
     <></>
@@ -108,7 +114,7 @@ const ThinkComponent = ({ node, children, ...props }) => {
   )
 }
 
-export function MarkdownRender(props) {
+export function MarkdownRender({ children, thinkingBlockMode, answerDone, ...props }) {
   return (
     <div dir="auto">
       <ReactMarkdown
@@ -189,11 +195,18 @@ export function MarkdownRender(props) {
         components={{
           a: Hyperlink,
           pre: Pre,
-          think: ThinkComponent,
+          think: (componentProps) => (
+            <ThinkComponent
+              {...componentProps}
+              thinkingBlockMode={thinkingBlockMode}
+              answerContent={children}
+              answerDone={answerDone}
+            />
+          ),
         }}
         {...props}
       >
-        {props.children.replace('</think>', '\n\n</think>\n\n')}
+        {children.replace('</think>', '\n\n</think>\n\n')}
       </ReactMarkdown>
     </div>
   )
