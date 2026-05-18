@@ -9,7 +9,12 @@ import { getUserConfig } from '../../config/index.mjs'
 import { fetchSSE } from '../../utils/fetch-sse.mjs'
 import { getConversationPairs } from '../../utils/get-conversation-pairs.mjs'
 import { isEmpty } from 'lodash-es'
-import { appendStreamAnswer, pushRecord, setAbortController } from './shared.mjs'
+import {
+  appendStreamAnswer,
+  createStreamAnswerState,
+  pushRecord,
+  setAbortController,
+} from './shared.mjs'
 import { getChatCompletionsTokenParams } from './openai-token-params.mjs'
 
 /**
@@ -38,6 +43,7 @@ export async function generateAnswersWithCustomApi(
   prompt.push({ role: 'user', content: question })
 
   let answer = ''
+  const streamAnswerState = createStreamAnswerState()
   let finished = false
   const finish = () => {
     finished = true
@@ -74,9 +80,12 @@ export async function generateAnswersWithCustomApi(
         return
       }
 
-      if (typeof data.response === 'string') answer = data.response
-      else {
-        answer = appendStreamAnswer(answer, data.choices?.[0])
+      if (typeof data.response === 'string') {
+        streamAnswerState.reasoning = ''
+        streamAnswerState.content = data.response
+        answer = data.response
+      } else {
+        answer = appendStreamAnswer(streamAnswerState, data.choices?.[0])
       }
       port.postMessage({ answer: answer, done: false, session: null })
 

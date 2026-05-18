@@ -4,7 +4,13 @@ import { getUserConfig } from '../../config/index.mjs'
 import { fetchSSE } from '../../utils/fetch-sse.mjs'
 import { getConversationPairs } from '../../utils/get-conversation-pairs.mjs'
 import { isEmpty } from 'lodash-es'
-import { appendStreamAnswer, getCompletionPromptBase, pushRecord, setAbortController } from './shared.mjs'
+import {
+  appendStreamAnswer,
+  createStreamAnswerState,
+  getCompletionPromptBase,
+  pushRecord,
+  setAbortController,
+} from './shared.mjs'
 import { getModelValue } from '../../utils/model-name-convert.mjs'
 import { getChatCompletionsTokenParams } from './openai-token-params.mjs'
 
@@ -29,6 +35,7 @@ export async function generateAnswersWithGptCompletionApi(port, question, sessio
   const apiUrl = config.customOpenAiApiUrl
 
   let answer = ''
+  const streamAnswerState = createStreamAnswerState()
   let finished = false
   const finish = () => {
     finished = true
@@ -66,7 +73,7 @@ export async function generateAnswersWithGptCompletionApi(port, question, sessio
         return
       }
 
-      answer = appendStreamAnswer(answer, data.choices[0])
+      answer = appendStreamAnswer(streamAnswerState, data.choices[0])
       port.postMessage({ answer: answer, done: false, session: null })
 
       if (data.choices[0]?.finish_reason) {
@@ -135,6 +142,7 @@ export async function generateAnswersWithOpenAiApiCompat(
   delete safeExtraBody[conflictingTokenParamKey]
 
   let answer = ''
+  const streamAnswerState = createStreamAnswerState()
   let finished = false
   const finish = () => {
     finished = true
@@ -172,7 +180,7 @@ export async function generateAnswersWithOpenAiApiCompat(
         return
       }
 
-      answer = appendStreamAnswer(answer, data.choices[0])
+      answer = appendStreamAnswer(streamAnswerState, data.choices[0])
       port.postMessage({ answer: answer, done: false, session: null })
 
       if (data.choices[0]?.finish_reason) {
