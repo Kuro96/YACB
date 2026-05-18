@@ -20,7 +20,7 @@ import { AdvancedPart } from './sections/AdvancedPart'
 import { ModulesPart } from './sections/ModulesPart'
 
 // eslint-disable-next-line react/prop-types
-function Footer({ currentVersion, latestVersion }) {
+function Footer({ currentVersion, latestVersion, latestTag }) {
   const { t } = useTranslation()
 
   return (
@@ -33,7 +33,7 @@ function Footer({ currentVersion, latestVersion }) {
           <>
             ({`${t('Latest')}: `}
             <a
-              href={'https://github.com/ChatGPTBox-dev/chatGPTBox/releases/tag/v' + latestVersion}
+              href={'https://github.com/ChatGPTBox-dev/chatGPTBox/releases/tag/' + latestTag}
               target="_blank"
               rel="nofollow noopener noreferrer"
             >
@@ -62,6 +62,7 @@ function Popup() {
   const [config, setConfig] = useState(defaultConfig)
   const [currentVersion, setCurrentVersion] = useState('')
   const [latestVersion, setLatestVersion] = useState('')
+  const [latestTag, setLatestTag] = useState('')
   const [tabIndex, setTabIndex] = useState(0)
   const theme = useWindowTheme()
 
@@ -79,7 +80,8 @@ function Popup() {
       setCurrentVersion(Browser.runtime.getManifest().version.replace('v', ''))
       fetch('https://api.github.com/repos/josstorer/chatGPTBox/releases/latest').then((response) =>
         response.json().then((data) => {
-          setLatestVersion(data.tag_name.replace('v', ''))
+          setLatestTag(data.tag_name)
+          setLatestVersion(data.tag_name.replace(/^v/, ''))
         }),
       )
     })
@@ -124,7 +126,7 @@ function Popup() {
         </Tabs>
       </form>
       <br />
-      <Footer currentVersion={currentVersion} latestVersion={latestVersion} />
+      <Footer currentVersion={currentVersion} latestVersion={latestVersion} latestTag={latestTag} />
     </div>
   )
 }
