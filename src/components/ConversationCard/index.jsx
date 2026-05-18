@@ -556,6 +556,8 @@ function ConversationCard(props) {
             key={idx}
             type={data.type}
             descName={data.type === 'answer' && session.aiName}
+            done={data.done}
+            thinkingBlockMode={config.thinkingBlockMode}
             onRetry={idx === conversationItemData.length - 1 ? retryFn : null}
           />
         ))}

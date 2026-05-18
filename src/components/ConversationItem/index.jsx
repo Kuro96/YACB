@@ -17,7 +17,7 @@ AnswerTitle.propTypes = {
   descName: PropTypes.string,
 }
 
-export function ConversationItem({ type, content, descName, onRetry }) {
+export function ConversationItem({ type, content, descName, done, thinkingBlockMode, onRetry }) {
   const { t } = useTranslation()
   const [collapsed, setCollapsed] = useState(false)
   const answerContent = removeThinkBlocks(content)
@@ -87,7 +87,11 @@ export function ConversationItem({ type, content, descName, onRetry }) {
               )}
             </div>
           </div>
-          {!collapsed && <MarkdownRender>{content}</MarkdownRender>}
+          {!collapsed && (
+            <MarkdownRender answerDone={done} thinkingBlockMode={thinkingBlockMode}>
+              {content}
+            </MarkdownRender>
+          )}
         </div>
       )
     case 'error':
@@ -131,6 +135,8 @@ ConversationItem.propTypes = {
   type: PropTypes.oneOf(['question', 'answer', 'error']).isRequired,
   content: PropTypes.string.isRequired,
   descName: PropTypes.string,
+  done: PropTypes.bool,
+  thinkingBlockMode: PropTypes.string,
   onRetry: PropTypes.func,
 }
 
