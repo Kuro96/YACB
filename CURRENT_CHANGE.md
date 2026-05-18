@@ -2,14 +2,14 @@
 
 ### Fixes
 
-- Keep DeepSeek V4 Pro thinking content out of default answer output.
-- Collapse rendered thinking blocks by default so reasoning is not shown before the final answer.
-- Strip `<think>...</think>` blocks from answer copy, read-aloud, and saved Markdown output.
-- Use a linear scanner for stripping thinking blocks to avoid regex backtracking on malformed model output.
+- Track streaming reasoning and final content in separate state so DeepSeek thinking boundaries no longer depend on rendered `</think>` text.
+- Add a Thinking Block setting with collapsed, expanded, and thinking-only expanded display modes.
+- Collapse thinking blocks automatically once final answer content starts when the thinking-only mode is selected.
 
 ### Validation
 
-- `npm test -- tests/unit/utils/remove-think-blocks.test.mjs tests/unit/services/apis/openai-api-compat.test.mjs`
+- `npm test -- tests/unit/components/think-display.test.mjs tests/unit/config/user-config.test.mjs tests/unit/services/apis/shared.test.mjs`
 - `npm test`
 - `npm run lint`
 - `npm run build`
+- Playwright popup smoke test for the Thinking Block selector
