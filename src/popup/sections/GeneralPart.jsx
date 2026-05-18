@@ -17,6 +17,7 @@ import {
   isUsingGithubThirdPartyApiModel,
   isUsingMultiModeModel,
   ModelMode,
+  ThinkingBlockMode,
   ThemeMode,
   TriggerMode,
   isUsingMoonshotApiModel,
@@ -87,6 +88,24 @@ export function GeneralPart({ config, updateConfig, setTabIndex }) {
           {Object.entries(ThemeMode).map(([key, desc]) => {
             return (
               <option value={key} key={key} selected={key === config.themeMode}>
+                {t(desc)}
+              </option>
+            )
+          })}
+        </select>
+      </label>
+      <label>
+        <legend>{t('Thinking Block')}</legend>
+        <select
+          required
+          onChange={(e) => {
+            const mode = e.target.value
+            updateConfig({ thinkingBlockMode: mode })
+          }}
+        >
+          {Object.entries(ThinkingBlockMode).map(([key, desc]) => {
+            return (
+              <option value={key} key={key} selected={key === config.thinkingBlockMode}>
                 {t(desc)}
               </option>
             )
