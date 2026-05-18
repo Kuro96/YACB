@@ -57,20 +57,24 @@ export function pushRecord(session, question, answer) {
   else session.conversationRecords.push({ question: question, answer: answer })
 }
 
-export function appendStreamAnswer(answer, choice) {
+export function createStreamAnswerState(content = '') {
+  return { reasoning: '', content }
+}
+
+function renderStreamAnswer(state) {
+  return state.reasoning ? `<think>${state.reasoning}</think>${state.content}` : state.content
+}
+
+export function appendStreamAnswer(state, choice) {
   const delta = choice?.delta
   const reasoning = delta?.reasoning_content ?? delta?.reasoning
-  if (typeof reasoning === 'string' && reasoning) {
-    if (answer.endsWith('</think>')) {
-      answer = `${answer.slice(0, -8)}${reasoning}</think>`
-    } else {
-      answer += `<think>${reasoning}</think>`
-    }
-  }
+  if (typeof reasoning === 'string' && reasoning) state.reasoning += reasoning
 
-  if (typeof delta?.content === 'string') answer += delta.content
-  else if (typeof choice?.message?.content === 'string') answer = choice.message.content
-  else if (typeof choice?.text === 'string') answer += choice.text
+  if (typeof delta?.content === 'string') state.content += delta.content
+  else if (typeof choice?.message?.content === 'string') {
+    state.reasoning = ''
+    state.content = choice.message.content
+  } else if (typeof choice?.text === 'string') state.content += choice.text
 
-  return answer
+  return renderStreamAnswer(state)
 }

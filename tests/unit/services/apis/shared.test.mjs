@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { pushRecord, setAbortController } from '../../../../src/services/apis/shared.mjs'
+import {
+  appendStreamAnswer,
+  createStreamAnswerState,
+  pushRecord,
+  setAbortController,
+} from '../../../../src/services/apis/shared.mjs'
 import { createFakePort } from '../../helpers/port.mjs'
 
 test('pushRecord appends a new record in normal mode', () => {
@@ -36,6 +41,44 @@ test('pushRecord appends when retry question differs from last one', () => {
 
   assert.equal(session.conversationRecords.length, 2)
   assert.deepEqual(session.conversationRecords[1], { question: 'Q2', answer: 'A2' })
+})
+
+test('appendStreamAnswer keeps reasoning state separate from content chunks', () => {
+  const state = createStreamAnswerState()
+
+  assert.equal(
+    appendStreamAnswer(state, { delta: { reasoning_content: 'Think' } }),
+    '<think>Think</think>',
+  )
+  assert.equal(
+    appendStreamAnswer(state, { delta: { reasoning_content: ' more' } }),
+    '<think>Think more</think>',
+  )
+  assert.equal(
+    appendStreamAnswer(state, { delta: { content: 'Final' } }),
+    '<think>Think more</think>Final',
+  )
+  assert.deepEqual(state, { reasoning: 'Think more', content: 'Final' })
+})
+
+test('appendStreamAnswer does not infer thinking state from rendered answer text', () => {
+  const state = createStreamAnswerState('Literal </think> marker')
+
+  assert.equal(
+    appendStreamAnswer(state, { delta: { reasoning_content: 'Hidden' } }),
+    '<think>Hidden</think>Literal </think> marker',
+  )
+})
+
+test('appendStreamAnswer treats message.content as a full answer', () => {
+  const state = createStreamAnswerState()
+
+  appendStreamAnswer(state, { delta: { reasoning_content: 'Hidden' } })
+  assert.equal(
+    appendStreamAnswer(state, { message: { content: 'Final content' } }),
+    'Final content',
+  )
+  assert.deepEqual(state, { reasoning: '', content: 'Final content' })
 })
 
 test('setAbortController aborts and cleans listeners on stop message', (t) => {
