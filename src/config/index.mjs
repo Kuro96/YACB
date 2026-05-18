@@ -20,6 +20,12 @@ export const ThemeMode = {
   auto: 'Auto',
 }
 
+export const ThinkingBlockMode = {
+  collapsed: 'Collapsed',
+  expanded: 'Expanded',
+  thinkingExpanded: 'Expanded while thinking, collapsed when answering',
+}
+
 export const ModelMode = {
   balanced: 'Balanced',
   creative: 'Creative',
@@ -503,6 +509,8 @@ export const defaultConfig = {
   triggerMode: 'manually',
   /** @type {keyof ThemeMode}*/
   themeMode: 'auto',
+  /** @type {keyof ThinkingBlockMode}*/
+  thinkingBlockMode: 'collapsed',
   /** @type {keyof Models}*/
   modelName: getNavigatorLanguage() === 'zh' ? 'moonshotWebFree' : 'claude2WebFree',
   apiMode: null,

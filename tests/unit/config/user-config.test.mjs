@@ -29,6 +29,12 @@ test('getUserConfig keeps modern chatgpt.com URL unchanged', async () => {
   assert.equal(config.customChatGptWebApiUrl, 'https://chatgpt.com')
 })
 
+test('getUserConfig defaults thinking blocks to collapsed', async () => {
+  const config = await getUserConfig()
+
+  assert.equal(config.thinkingBlockMode, 'collapsed')
+})
+
 test('getUserConfig migrates legacy Claude keys to Anthropic keys and removes old keys', async () => {
   globalThis.__TEST_BROWSER_SHIM__.replaceStorage({
     claudeApiKey: 'legacy-key',
